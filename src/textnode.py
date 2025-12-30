@@ -12,7 +12,6 @@ class TextType(Enum):
     ITALIC = "italic"
     CODE = "code"
     LINK = "link"
-    URL = "url"
     IMAGE = "image"
 
 
@@ -83,21 +82,17 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
         if not node.text_type == TextType.TEXT:
             new_nodes.append(node)
         else:
-            if node.text.count(delimiter) == 0:
+            count = node.text.count(delimiter)
+            if count == 0:
                 new_nodes.append(node)
-            elif node.text.count(delimiter) == 2:
+            elif count % 2 == 0:
                 text_list = node.text.split(delimiter)
-                if text_list[0] != "":
-                    new_nodes.append(
-                        TextNode(text_list[0], TextType.TEXT, url=node.url)
-                    )
-                new_nodes.append(
-                    TextNode(text_list[1], text_type, url=node.url)
-                )
-                if text_list[2] != "":
-                    new_nodes.append(
-                        TextNode(text_list[2], TextType.TEXT, url=node.url)
-                    )
+                for i, val in enumerate(text_list):
+                    if val != "":
+                        if i % 2 == 0:
+                            new_nodes.append(TextNode(val, TextType.TEXT))
+                        else:
+                            new_nodes.append(TextNode(val, text_type))
             else:
                 raise ValueError(
                     f'"{node.text}" does not contain valid markdown.'
@@ -115,3 +110,49 @@ def extract_markdown_images(text):
     rx = r"!\[([^\[\]]*)\]\(([^\(\)]*)\)"
     matches = re.findall(rx, text)
     return matches
+
+
+def split_nodes_link(old_nodes):
+    new_nodes = []
+    for node in old_nodes:
+        if node.text_type != TextType.TEXT:
+            new_nodes.append(node)
+        else:
+            temp = [node.text]
+            matches = extract_markdown_links(node.text)
+            for match in matches:
+                temp = temp[-1].split(f"[{match[0]}]({match[1]})", 1)
+                if len(temp[0]) > 0:
+                    new_nodes.append(TextNode(temp[0], node.text_type))
+                new_nodes.append(TextNode(match[0], TextType.LINK, match[1]))
+            if len(temp[-1]) > 0:
+                new_nodes.append(TextNode(temp[-1], node.text_type))
+    return new_nodes
+
+
+def split_nodes_image(old_nodes):
+    new_nodes = []
+    for node in old_nodes:
+        if node.text_type != TextType.TEXT:
+            new_nodes.append(node)
+        else:
+            temp = [node.text]
+            matches = extract_markdown_images(node.text)
+            for match in matches:
+                temp = temp[-1].split(f"![{match[0]}]({match[1]})", 1)
+                if len(temp[0]) > 0:
+                    new_nodes.append(TextNode(temp[0], node.text_type))
+                new_nodes.append(TextNode(match[0], TextType.IMAGE, match[1]))
+            if len(temp[-1]) > 0:
+                new_nodes.append(TextNode(temp[-1], node.text_type))
+    return new_nodes
+
+
+def text_to_textnodes(text):
+    node = TextNode(text, TextType.TEXT)
+    nodes_list = split_nodes_delimiter([node], "**", TextType.BOLD)
+    nodes_list = split_nodes_delimiter(nodes_list, "_", TextType.ITALIC)
+    nodes_list = split_nodes_delimiter(nodes_list, "`", TextType.CODE)
+    nodes_list = split_nodes_link(nodes_list)
+    nodes_list = split_nodes_image(nodes_list)
+    return nodes_list
