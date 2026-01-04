@@ -16,7 +16,7 @@ class TextType(Enum):
 
 
 class TextNode:
-    """A class containing basic ingormation abaout a section of text"""
+    """A class containing basic information abaout a section of text"""
 
     def __init__(self, text, text_type, url=None):
         """TextNode constructor
@@ -149,7 +149,7 @@ def split_nodes_image(old_nodes):
 
 
 def text_to_textnodes(text):
-    node = TextNode(text, TextType.TEXT)
+    node = TextNode(text.replace("\n", " "), TextType.TEXT)
     nodes_list = split_nodes_delimiter([node], "**", TextType.BOLD)
     nodes_list = split_nodes_delimiter(nodes_list, "_", TextType.ITALIC)
     nodes_list = split_nodes_delimiter(nodes_list, "`", TextType.CODE)
