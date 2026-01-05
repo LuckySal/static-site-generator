@@ -78,13 +78,10 @@ def itemize(block, block_type):
             children = [text_node_to_html_node(child) for child in text_nodes]
             items.append(ParentNode("li", children))
     elif block_type == BlockType.ORDERED_LIST:
-        if block_type == BlockType.UNORDERED_LIST:
-            for line in lines:
-                text_nodes = text_to_textnodes(line[3:])
-                children = [
-                    text_node_to_html_node(child) for child in text_nodes
-                ]
-                items.append(ParentNode("li", children))
+        for line in lines:
+            text_nodes = text_to_textnodes(line[3:])
+            children = [text_node_to_html_node(child) for child in text_nodes]
+            items.append(ParentNode("li", children))
     else:
         raise TypeError(f"{block_type} cannot be itemized")
     return items
