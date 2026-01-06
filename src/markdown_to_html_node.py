@@ -65,7 +65,7 @@ def strip_heading(block):
 
 def strip_quotes(block):
     lines = block.split("\n")
-    new_lines = [line[1:] for line in lines]
+    new_lines = [line[1:].strip() for line in lines]
     return "\n".join(new_lines)
 
 
@@ -85,3 +85,15 @@ def itemize(block, block_type):
     else:
         raise TypeError(f"{block_type} cannot be itemized")
     return items
+
+
+def extract_heading(markdown):
+    blocks_list = markdown.split("\n\n")
+    for block in blocks_list:
+        if block:
+            stripped_block = block.strip()
+            if block_to_block_type(stripped_block) == BlockType.HEADING:
+                heading, level = strip_heading(stripped_block)
+                if level == 1:
+                    return heading
+            raise Exception("Error: document must have a heading")

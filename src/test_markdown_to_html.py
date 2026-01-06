@@ -1,5 +1,5 @@
 import unittest
-from markdown_to_html_node import markdown_to_html_node
+from markdown_to_html_node import markdown_to_html_node, extract_heading
 
 
 class TestMarkdownToHTML(unittest.TestCase):
@@ -112,6 +112,61 @@ the **same** even with inline stuff
             html,
             "<div><h3>Quote block</h3><blockquote>Darkness cannot drive out darkness: only light can do that. Hate cannot drive out hate: only love can do that. - Martin Luther King Jr.</blockquote></div>",
         )
+
+    # Extract heading
+    def test_extract_heading(self):
+        md = """
+
+# Document Titles: An Analysis
+
+Some paragraph text that should be ignored
+
+```
+A code block
+```
+"""
+        heading = extract_heading(md)
+        self.assertEqual(heading, "Document Titles: An Analysis")
+
+    def test_wrong_heading_level(self):
+        with self.assertRaises(Exception):
+            md = """
+
+## Subheadings: A Critique
+
+### A list
+
+- One
+- Two
+- Three
+
+"""
+            heading = extract_heading(md)
+
+    def test_no_heading(self):
+        with self.assertRaises(Exception):
+            md = """
+
+What? No title?
+
+**This is preposterous!**
+
+"""
+            heading = extract_heading(md)
+
+    def test_heading_not_first(self):
+        with self.assertRaises(Exception):
+            md = """
+
+```There's a sneaky
+code block first
+lol
+```
+
+# Late Headings: A Response
+ 
+"""
+            heading = extract_heading(md)
 
 
 if __name__ == "__main__":
